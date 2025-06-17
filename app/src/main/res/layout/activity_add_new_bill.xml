@@ -68,4 +68,24 @@
         android:layout_alignTop="@+id/addBillItemCost"
         android:layout_marginTop="62dp"/>
 
+    <TextView
+        android:id="@+id/addBillAffectedMembersLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/addBillItemPaidBy"
+        android:layout_marginTop="24dp"
+        android:layout_marginLeft="15dp"
+        android:text="Affected members:"
+        android:textSize="18sp"
+        android:textColor="@android:color/holo_orange_dark"/>
+
+    <ListView
+        android:id="@+id/addBillAffectedMembersList"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_below="@+id/addBillAffectedMembersLabel"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:choiceMode="multipleChoice"/>
+
 </RelativeLayout>

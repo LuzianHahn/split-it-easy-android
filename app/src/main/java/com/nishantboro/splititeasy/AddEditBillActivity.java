@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 import java.math.BigDecimal;
@@ -33,6 +34,10 @@ public class AddEditBillActivity extends AppCompatActivity implements AdapterVie
     private int memberId;
     private int requestCode;
     private int billId;
+    private ListView affectedMembersListView;
+    private ArrayAdapter<String> affectedMembersAdapter;
+    private List<MemberEntity> allMembers = new ArrayList<>();
+    private List<Integer> selectedAffectedMemberIds = new ArrayList<>();
 
     private void saveExpense() {
         String item = editTextItem.getText().toString();
@@ -46,6 +51,16 @@ public class AddEditBillActivity extends AppCompatActivity implements AdapterVie
 
         BillViewModel billViewModel = ViewModelProviders.of(this,new BillViewModelFactory(getApplication(),gName)).get(BillViewModel.class);
 
+        // Compose affected member IDs as comma-separated string
+        StringBuilder affectedIdsBuilder = new StringBuilder();
+        for (int i = 0; i < selectedAffectedMemberIds.size(); i++) {
+            affectedIdsBuilder.append(selectedAffectedMemberIds.get(i));
+            if (i < selectedAffectedMemberIds.size() - 1) {
+                affectedIdsBuilder.append(",");
+            }
+        }
+        String affectedIds = affectedIdsBuilder.toString();
+
         if(requestCode == 1) { // 1 for Add Bill Activity
             // Round up the cost of the bill to 2 decimal places
             BigDecimal decimal = new BigDecimal(cost);
@@ -53,13 +68,14 @@ public class AddEditBillActivity extends AppCompatActivity implements AdapterVie
 
             // store to database
 //            Log.d("1", Integer.toString(memberId));
-            billViewModel.insert(new BillEntity(memberId,item,res.toString(),gName,paidBy));
+            BillEntity bill = new BillEntity(memberId, item, res.toString(), gName, paidBy);
+            bill.affectedMemberIds = affectedIds;
+            billViewModel.insert(bill);
         }
-
         if(requestCode == 2) { // 2 for Edit Bill Activity
-            BillEntity bill = new BillEntity(memberId,item,cost,gName,paidBy);
+            BillEntity bill = new BillEntity(memberId, item, cost, gName, paidBy);
             bill.setId(billId);
-
+            bill.affectedMemberIds = affectedIds;
             /* update the database. note that update operation in billViewModel looks for a row in BillEntity where the value of column("Id")  = billId
                and if found, updates other columns in the row */
             billViewModel.update(bill);
@@ -77,6 +93,11 @@ public class AddEditBillActivity extends AppCompatActivity implements AdapterVie
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_new_bill);
+
+        affectedMembersListView = findViewById(R.id.addBillAffectedMembersList);
+        affectedMembersAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_multiple_choice);
+        affectedMembersListView.setAdapter(affectedMembersAdapter);
+        affectedMembersListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
         // set toolbar
         Toolbar toolbar = findViewById(R.id.addBillToolbar);
@@ -135,6 +156,53 @@ public class AddEditBillActivity extends AppCompatActivity implements AdapterVie
 
         // get all current members of the group
         MemberViewModel memberViewModel = ViewModelProviders.of(this,new MemberViewModelFactory(getApplication(),gName)).get(MemberViewModel.class);
+        memberViewModel.getAllMembers().observe(this, new Observer<List<MemberEntity>>() {
+            @Override
+            public void onChanged(List<MemberEntity> memberEntities) {
+                allMembers.clear();
+                allMembers.addAll(memberEntities);
+                affectedMembersAdapter.clear();
+                for (MemberEntity m : memberEntities) {
+                    affectedMembersAdapter.add(m.name);
+                }
+                affectedMembersAdapter.notifyDataSetChanged();
+                // By default, check all members (old behavior)
+                for (int i = 0; i < memberEntities.size(); i++) {
+                    affectedMembersListView.setItemChecked(i, true);
+                    selectedAffectedMemberIds.add(memberEntities.get(i).id);
+                }
+                // If editing, restore previous selection
+                if(requestCode == 2 && intent.hasExtra("billAffectedMemberIds")) {
+                    String affectedIds = intent.getStringExtra("billAffectedMemberIds");
+                    if (affectedIds != null && !affectedIds.isEmpty()) {
+                        selectedAffectedMemberIds.clear();
+                        String[] ids = affectedIds.split(",");
+                        for (int i = 0; i < memberEntities.size(); i++) {
+                            for (String id : ids) {
+                                if (String.valueOf(memberEntities.get(i).id).equals(id)) {
+                                    affectedMembersListView.setItemChecked(i, true);
+                                    selectedAffectedMemberIds.add(memberEntities.get(i).id);
+                                } else {
+                                    affectedMembersListView.setItemChecked(i, false);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        affectedMembersListView.setOnItemClickListener((parent, view, position, id) -> {
+            int memberId = allMembers.get(position).id;
+            if (affectedMembersListView.isItemChecked(position)) {
+                if (!selectedAffectedMemberIds.contains(memberId))
+                    selectedAffectedMemberIds.add(memberId);
+            } else {
+                selectedAffectedMemberIds.remove(Integer.valueOf(memberId));
+            }
+        });
+
+        // get all current members of the group
+        memberViewModel = ViewModelProviders.of(this,new MemberViewModelFactory(getApplication(),gName)).get(MemberViewModel.class);
         memberViewModel.getAllMembers().observe(this, new Observer<List<MemberEntity>>() {
             @Override
             public void onChanged(List<MemberEntity> memberEntities) {

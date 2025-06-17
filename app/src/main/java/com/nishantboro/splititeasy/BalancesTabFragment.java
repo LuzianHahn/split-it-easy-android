@@ -28,42 +28,53 @@ public class BalancesTabFragment extends Fragment {
     private RecyclerView recyclerView;
     private TextView emptyView;
     private TextView header;
+    private List<BillEntity> currentBills = new ArrayList<>();
 
     private void calculateBalances(PriorityQueue<Balance> debtors,PriorityQueue<Balance> creditors) {
         if(getActivity() == null) {
             return;
         }
-        BillViewModel billViewModel = ViewModelProviders.of(this,new BillViewModelFactory(getActivity().getApplication(),gName)).get(BillViewModel.class);
+        // BillViewModel billViewModel = ViewModelProviders.of(this,new BillViewModelFactory(getActivity().getApplication(),gName)).get(BillViewModel.class);
         List<BigDecimal> preBalances = new ArrayList<>();
         BigDecimal sum = new BigDecimal("0");
-
-        // Now, we can iterate through every member i(say) and do a query(in BillEntity) to get all the expenses for every i-th member
-        for(MemberEntity member:members) {
-            List<BillEntity> memberBills = billViewModel.getAllMemberBills(this.gName,member.id);
-            BigDecimal sumOfAllBills = new BigDecimal("0");
-            for(BillEntity memberBill:memberBills) {
-                sumOfAllBills = sumOfAllBills.add(new BigDecimal(memberBill.cost));
-            }
-            preBalances.add(sumOfAllBills);
-            sum = sum.add(sumOfAllBills);
+        // Prepare a map to track how much each member has paid and owes
+        HashMap<Integer, BigDecimal> paidMap = new HashMap<>();
+        HashMap<Integer, BigDecimal> owesMap = new HashMap<>();
+        for (MemberEntity member : members) {
+            paidMap.put(member.id, BigDecimal.ZERO);
+            owesMap.put(member.id, BigDecimal.ZERO);
         }
-
-        // Each member in the group is supposed to pay an amount of sum/(members.size()) = eachPay
-        BigDecimal eachPay = sum.divide(new BigDecimal(members.size()),2, RoundingMode.HALF_EVEN);
-
-        /* Find the balance of everyone in the group. Balance is the net amount of money someone owes or is owed from the group.
-        * Balance of someone = eachPay - total money paid by the member.
-        * If someone has a -ve balance, it means he is owed money and hence is added to the debtors list
-        * If someone has a +ve balance, it means he owes money to the group and hence is added to the creditors list*/
-
-        for (int i=0;i<preBalances.size();++i) {
-            BigDecimal balance = eachPay.subtract(preBalances.get(i));
-            int compare = 1;
-            int compareNegate = -1;
-            if(balance.compareTo(new BigDecimal("-0.49")) == compareNegate) {
-                debtors.add(new Balance(balance.negate(),members.get(i).name)); // -ve members go to debtors list, note that we negate the balance to get the absolute value
-            } else if (balance.compareTo(new BigDecimal("0.49")) == compare) {
-                creditors.add(new Balance(balance,members.get(i).name)); // +ve members go to creditors list
+        // For each bill, split cost only among affected members
+        for (BillEntity bill : currentBills) {
+            // Parse affected members
+            List<Integer> affectedIds = new ArrayList<>();
+            if (bill.affectedMemberIds != null && !bill.affectedMemberIds.isEmpty()) {
+                String[] ids = bill.affectedMemberIds.split(",");
+                for (String id : ids) {
+                    try { affectedIds.add(Integer.parseInt(id)); } catch (Exception ignored) {}
+                }
+            }
+            if (affectedIds.isEmpty()) continue; // skip if no affected members
+            BigDecimal billCost = new BigDecimal(bill.cost);
+            BigDecimal split = billCost.divide(new BigDecimal(affectedIds.size()), 2, RoundingMode.HALF_EVEN);
+            // Add to paid for the payer
+            BigDecimal paid = paidMap.getOrDefault(bill.mid, BigDecimal.ZERO);
+            paidMap.put(bill.mid, paid.add(billCost));
+            // Add to owes for each affected member
+            for (int id : affectedIds) {
+                BigDecimal owes = owesMap.getOrDefault(id, BigDecimal.ZERO);
+                owesMap.put(id, owes.add(split));
+            }
+        }
+        // Calculate balances
+        for (MemberEntity member : members) {
+            BigDecimal paid = paidMap.getOrDefault(member.id, BigDecimal.ZERO);
+            BigDecimal owes = owesMap.getOrDefault(member.id, BigDecimal.ZERO);
+            BigDecimal balance = owes.subtract(paid); // positive: owes, negative: is owed
+            if (balance.compareTo(new BigDecimal("0.49")) > 0) {
+                creditors.add(new Balance(balance, member.name));
+            } else if (balance.compareTo(new BigDecimal("-0.49")) < 0) {
+                debtors.add(new Balance(balance.negate(), member.name));
             }
         }
     }
@@ -148,6 +159,14 @@ public class BalancesTabFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);
 
+        // Observe bills using LiveData
+        BillViewModel billViewModel = ViewModelProviders.of(this,new BillViewModelFactory(getActivity().getApplication(),gName)).get(BillViewModel.class);
+        billViewModel.getAllBills().observe(getViewLifecycleOwner(), bills -> {
+            currentBills.clear();
+            if (bills != null) currentBills.addAll(bills);
+            runCalculations();
+        });
+
         return view;
     }
 
@@ -159,10 +178,9 @@ public class BalancesTabFragment extends Fragment {
         }
         MemberViewModel memberViewModel = ViewModelProviders.of(this,new MemberViewModelFactory(getActivity().getApplication(),gName)).get(MemberViewModel.class);
         members =  memberViewModel.getAllMembersNonLiveData(gName);
-
         // get latest currency picked by the user
         currency = groupViewModel.getGroupCurrencyNonLive(gName);
-        runCalculations(); // run the algorithm
+        runCalculations(); // run the algorithm (will use latest bills from LiveData)
         super.onResume();
     }
 

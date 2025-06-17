@@ -52,6 +52,9 @@ public class BillEntity {
     @ColumnInfo(name = "GroupName")
     String gName;
 
+    @ColumnInfo(name = "AffectedMemberIds") // comma-separated member IDs affected by this bill
+    String affectedMemberIds;
+
     public void setId(int id) {
         this.id = id;
     }
