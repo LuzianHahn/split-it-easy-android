@@ -6,4 +6,14 @@
         android:icon="@drawable/ic_share_black_24dp"
         android:title="Share"
         app:showAsAction="always"/>
+    <item
+        android:id="@+id/mainMenuExport"
+        android:icon="@android:drawable/ic_menu_save"
+        android:title="Exportieren"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/mainMenuImport"
+        android:icon="@android:drawable/ic_menu_upload"
+        android:title="Importieren"
+        app:showAsAction="never"/>
 </menu>

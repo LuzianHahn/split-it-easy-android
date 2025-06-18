@@ -21,4 +21,12 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract MemberDao memberDao();
     public abstract BillDao billDao();
     public abstract GroupDao groupDao();
+
+    // Methode zum Zurücksetzen der Instanz für Import/Hot-Reload
+    public static synchronized void clearInstance() {
+        if (instance != null) {
+            instance.close();
+            instance = null;
+        }
+    }
 }
