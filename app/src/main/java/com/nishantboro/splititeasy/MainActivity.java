@@ -100,7 +100,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             exportDatabase(treeUri);
         } else if (requestCode == REQUEST_CODE_IMPORT_DB && resultCode == Activity.RESULT_OK && data != null) {
             Uri fileUri = data.getData();
-            importDatabase(fileUri);
+            // Show confirmation dialog before importing
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Import Database")
+                .setMessage("Warning: Importing will overwrite your current data. Do you want to continue?")
+                .setPositiveButton("Yes", (dialog, which) -> importDatabase(fileUri))
+                .setNegativeButton("No", null)
+                .show();
         }
     }
 
@@ -210,3 +216,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 }
+
