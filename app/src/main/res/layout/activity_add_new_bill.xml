@@ -88,4 +88,28 @@
         android:layout_marginRight="15dp"
         android:choiceMode="multipleChoice"/>
 
+    <TextView
+        android:id="@+id/addBillDateLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/addBillAffectedMembersList"
+        android:layout_marginTop="24dp"
+        android:layout_marginLeft="15dp"
+        android:text="Date:"
+        android:textSize="18sp"
+        android:textColor="@android:color/holo_orange_dark"/>
+
+    <TextView
+        android:id="@+id/addBillDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/addBillAffectedMembersList"
+        android:layout_toEndOf="@+id/addBillDateLabel"
+        android:layout_toRightOf="@+id/addBillDateLabel"
+        android:layout_marginTop="24dp"
+        android:layout_marginLeft="15dp"
+        android:textSize="18sp"
+        android:clickable="true"
+        android:focusable="true"/>
+
 </RelativeLayout>

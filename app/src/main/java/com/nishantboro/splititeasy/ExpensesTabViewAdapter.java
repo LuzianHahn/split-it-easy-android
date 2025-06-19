@@ -14,8 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /* Objective: Prepare a custom adapter that could create/update the view for every item in the recycler view */
 public class ExpensesTabViewAdapter extends RecyclerView.Adapter<ExpensesTabViewAdapter.ExpenseDetailViewHolder> {
@@ -81,6 +84,7 @@ public class ExpensesTabViewAdapter extends RecyclerView.Adapter<ExpensesTabView
         private TextView textViewCost;
         private TextView textViewCurrency;
         private TextView textViewPaidBy;
+        private TextView textViewDate;
         private RelativeLayout relativeLayout;
 
         ExpenseDetailViewHolder(@NonNull View itemView) {
@@ -91,6 +95,7 @@ public class ExpensesTabViewAdapter extends RecyclerView.Adapter<ExpensesTabView
             textViewCost = itemView.findViewById(R.id.expenseDetailCost);
             textViewCurrency = itemView.findViewById(R.id.expenseDetailCurrency);
             textViewPaidBy = itemView.findViewById(R.id.expenseDetailPaidBy);
+            textViewDate = itemView.findViewById(R.id.expenseDetailDate);
             relativeLayout = itemView.findViewById(R.id.expenseDetail);
         }
 
@@ -146,10 +151,15 @@ public class ExpensesTabViewAdapter extends RecyclerView.Adapter<ExpensesTabView
         StringBuilder justText = new StringBuilder();
         justText.append("Paid By: ");
         final ExpenseDetailViewHolder hold = holder;
-        holder.textViewItem.setText(list.get(position).item); // set bill item to holder
-        holder.textViewCost.setText(list.get(position).cost); // set bill cost to holder
-        holder.textViewPaidBy.setText(justText.append(list.get(position).paidBy)); // set bill paidBy to holder
-        holder.textViewCurrency.setText(Character.toString(currency.charAt(5))); // set bill currency to holder. charAt(5) holds the currency symbol(like in USD-($))
+        holder.textViewItem.setText(list.get(position).item);
+        holder.textViewCost.setText(list.get(position).cost);
+        holder.textViewPaidBy.setText(justText.append(list.get(position).paidBy));
+        holder.textViewCurrency.setText(currency);
+
+        // Format and display the date
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMAN);
+        holder.textViewDate.setText(dateFormat.format(new Date(list.get(position).getDate())));
+
         holder.update(list.get(position));
 
         final int pos = position;

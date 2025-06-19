@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -18,11 +19,16 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /* Note that this activity can act as a Add Bill Activity or Edit Bill Activity based on the intent data we receive*/
 public class AddEditBillActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
@@ -38,6 +44,8 @@ public class AddEditBillActivity extends AppCompatActivity implements AdapterVie
     private ArrayAdapter<String> affectedMembersAdapter;
     private List<MemberEntity> allMembers = new ArrayList<>();
     private List<Integer> selectedAffectedMemberIds = new ArrayList<>();
+    private TextView dateTextView;
+    private long selectedDate;
 
     private void saveExpense() {
         String item = editTextItem.getText().toString();
@@ -70,12 +78,14 @@ public class AddEditBillActivity extends AppCompatActivity implements AdapterVie
 //            Log.d("1", Integer.toString(memberId));
             BillEntity bill = new BillEntity(memberId, item, res.toString(), gName, paidBy);
             bill.affectedMemberIds = affectedIds;
+            bill.setDate(selectedDate);
             billViewModel.insert(bill);
         }
         if(requestCode == 2) { // 2 for Edit Bill Activity
             BillEntity bill = new BillEntity(memberId, item, cost, gName, paidBy);
             bill.setId(billId);
             bill.affectedMemberIds = affectedIds;
+            bill.setDate(selectedDate);
             /* update the database. note that update operation in billViewModel looks for a row in BillEntity where the value of column("Id")  = billId
                and if found, updates other columns in the row */
             billViewModel.update(bill);
@@ -227,12 +237,50 @@ public class AddEditBillActivity extends AppCompatActivity implements AdapterVie
             editTextItem.setText(intent.getStringExtra("billName")); // set default text received from the intent
             editTextCost.setText(intent.getStringExtra("billCost")); // set default text received from the intent
             paidBy = intent.getStringExtra("billPaidBy");
+            String dateStr = intent.getStringExtra("billDate");
+            try {
+                selectedDate = Long.parseLong(dateStr);
+            } catch (NumberFormatException e) {
+                selectedDate = System.currentTimeMillis();
+            }
         } else {
             setTitle("Add an Expense");
+            selectedDate = System.currentTimeMillis();
         }
 
+        // Initialize date picker functionality
+        dateTextView = findViewById(R.id.addBillDate);
+        updateDateDisplay();
+
+        // Set click listener for date picker
+        dateTextView.setOnClickListener(v -> showDatePickerDialog());
+
+        // Make it clear to the user that the date is clickable
+        dateTextView.setBackgroundResource(android.R.drawable.editbox_background);
+        dateTextView.setPadding(10, 10, 10, 10);
     }
 
+    private void showDatePickerDialog() {
+        final Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(selectedDate);
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH);
+        int day = c.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.set(selectedYear, selectedMonth, selectedDay);
+                    selectedDate = calendar.getTimeInMillis();
+                    updateDateDisplay();
+                }, year, month, day);
+        datePickerDialog.show();
+    }
+
+    private void updateDateDisplay() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMAN);
+        dateTextView.setText(dateFormat.format(new Date(selectedDate)));
+    }
 
     public String PerfectDecimal(String str, int MAX_BEFORE_POINT, int MAX_DECIMAL){
         if(str.charAt(0) == '.') str = "0"+str;

@@ -26,13 +26,15 @@ import androidx.room.PrimaryKey;
                 @Index(name="GroupNameIndexBill",value = {"GroupName"})
         })
 public class BillEntity {
-    BillEntity(int mid, String item, String cost, String gName,String paidBy) {
+    BillEntity(int mid, String item, String cost, String gName, String paidBy) {
         this.mid = mid;
         this.item = item;
         this.cost = cost;
         this.gName = gName;
         this.paidBy = paidBy;
+        this.date = System.currentTimeMillis(); // Set default date to current time
     }
+
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "Id")
     public int id;
@@ -52,10 +54,21 @@ public class BillEntity {
     @ColumnInfo(name = "GroupName")
     String gName;
 
+    @ColumnInfo(name = "Date")
+    long date;
+
     @ColumnInfo(name = "AffectedMemberIds") // comma-separated member IDs affected by this bill
     String affectedMemberIds;
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public long getDate() {
+        return date;
+    }
+
+    public void setDate(long date) {
+        this.date = date;
     }
 }

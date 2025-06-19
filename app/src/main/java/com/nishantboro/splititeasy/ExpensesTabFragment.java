@@ -114,9 +114,11 @@ public class ExpensesTabFragment extends Fragment {
                 intent.putExtra("billCost",bill.cost);
                 intent.putExtra("billMemberId",bill.mid);
                 intent.putExtra("billName",bill.item);
+                intent.putExtra("billDate", String.valueOf(bill.date)); // Änderung hier: Direkt auf das date-Feld zugreifen
                 intent.putExtra("groupCurrency", currency.toString());
                 intent.putExtra(GroupListActivity.EXTRA_TEXT_GNAME,bill.gName);
                 intent.putExtra("requestCode",2); // using requestCode(value = 2) to identify edit expense intent
+                intent.putExtra("billAffectedMemberIds", bill.affectedMemberIds);
 
                 if(getActivity() != null) {
                     getActivity().startActivityFromFragment(ExpensesTabFragment.this, intent, 2); // launch the intent
