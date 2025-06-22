@@ -10,7 +10,7 @@ CHANGELOG="CHANGELOG.md"
 GRADLE_FILE="./app/build.gradle"
 
 # Get commit messages since BASE_COMMIT
-COMMITS=$(git log --pretty=format:"%s" "$BASE_COMMIT"..HEAD)
+COMMITS=$(git log --pretty=format:"%s" "$BASE_COMMIT"..HEAD | grep -E "^(fix:|feat:).*")
 
 # Check for feat: and fix: commits
 has_feat=0
