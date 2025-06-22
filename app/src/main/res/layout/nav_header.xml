@@ -11,7 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:background="@color/colorAccent"
-        android:gravity="center">
+        android:gravity="center"
+        android:orientation="vertical">
 
         <ImageView
             android:layout_width="120dp"
@@ -21,6 +22,14 @@
             android:layout_marginStart="10dp"
             android:src="@drawable/ic_launcher_foreground" />
 
+        <TextView
+            android:id="@+id/nav_version_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            tools:text="v1.2.0" />
 
     </LinearLayout>
 

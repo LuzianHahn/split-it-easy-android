@@ -12,4 +12,5 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="copyright">Copyright © 2019 Nishant Boro</string>
     <string name="developer">Designed &amp; Developed By Nishant Boro</string>
+    <string name="version_format">v%s</string>
 </resources>

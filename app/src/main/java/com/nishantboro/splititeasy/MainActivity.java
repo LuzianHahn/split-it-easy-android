@@ -14,6 +14,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
+import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private DrawerLayout drawer;
@@ -41,6 +43,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
+        // Add version info to navigation drawer
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        View headerView = navigationView.getHeaderView(0);
+        TextView versionInfo = headerView.findViewById(R.id.nav_version_info);
+        if (versionInfo != null) {
+            versionInfo.setText(getString(R.string.version_format, BuildConfig.VERSION_NAME));
+        }
 
 
         // get view references for "Groups" and "Create New group" Buttons
