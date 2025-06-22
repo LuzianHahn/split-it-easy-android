@@ -1,3 +1,8 @@
+# 1.3.0
+
+- feat: add version info in app
+
+
 # 1.2.0
 
 - feat: add date to expenses
