@@ -1,3 +1,8 @@
+# 1.2.0
+
+- feat: add date to expenses
+
+
 # 1.1.0
 
 - feat: add confirmation dialog before import (and overwrite)
