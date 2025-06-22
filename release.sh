@@ -26,16 +26,21 @@ done <<< "$COMMITS"
 
 # Read current version from build.gradle
 current_version=$(grep "versionName" $GRADLE_FILE | head -n 1 | xargs | cut -d" " -f2)
-echo "FOund current version: $current_version"
+current_version_code=$(grep "versionCode" $GRADLE_FILE | head -n 1 | xargs | cut -d" " -f2)
+echo "Found current version infos: "
+echo "versionName: $current_version"
+echo "versionCode: $current_version_code"
 IFS='.' read -ra ver <<< "$current_version"
 major=${ver[0]}
 minor=${ver[1]}
 micro=${ver[2]}
+new_version_code=$current_version_code
 
 # Bump version
 if [ $has_feat -eq 1 ]; then
     minor=$((minor + 1))
     micro=0
+    new_version_code=$((current_version_code + 1))    
 elif [ $has_fix -eq 1 ]; then
     micro=$((micro + 1))
 else
@@ -47,6 +52,7 @@ new_version="$major.$minor.$micro"
 
 # Update build.gradle
 sed -i -E "s/versionName \"[0-9]+\.[0-9]+\.[0-9]+\"/versionName \"$new_version\"/" "$GRADLE_FILE"
+sed -i -E "s/versionCode [0-9]+/versionCode $new_version_code/" "$GRADLE_FILE"
 
 # Prepare changelog entry
 echo -e "# $new_version\n" > temp_changelog
@@ -63,5 +69,5 @@ else
 fi
 mv temp_changelog "$CHANGELOG"
 
-echo "Version bumped to $new_version and changelog updated."
+echo "Version bumped to $new_version / $new_version_code and changelog updated."
 
