@@ -71,3 +71,10 @@ mv temp_changelog "$CHANGELOG"
 
 echo "Version bumped to $new_version / $new_version_code and changelog updated."
 
+# commiting version Update
+echo "Adding new release to git..." && \
+    git add $CHANGELOG $GRADLE_FILE && \
+    git commit -m "chore: bump version to $new_version" && \
+    git tag "v${new_version}" -f && \
+    echo "finished git release of v$new_version. You can submit these changes via" && \
+    echo "\"git push --tags && git push\""
